@@ -19,7 +19,7 @@
 #include <string.h> /* memset() */
 #include <stdlib.h>
 #include <time.h>
-#include "sendto_h"
+#include "sendto_.h"
 
 #define LOCAL_SERVER_PORT 50000
 
@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
 
 	struct sockaddr_in cliAddr, servAddr;
 	unsigned int cliLen;
+	int sock, rc;
 
 	/* You should have some command-line processing that follows the format
 	   ./server_SRP <error_rate> <random_seed> <output_file> <receive_log>
@@ -39,32 +40,38 @@ int main(int argc, char *argv[]) {
 	}
 	printf("error rate : %f\n",atof(argv[1]));
 
+	
 
-	/* Note: you must initialize the network library first before calling
+	
+
+	
+
+	/* Note: recvyou must initialize the network library first before calling
 	   sendto_().  The arguments are the <errorrate> and <random seed> */
 	init_net_lib(atof(argv[1]), atoi(argv[2]));
 
 	/* socket creation */
-	sd=socket(***************************);
-	if(sd<0) {
-		printf("%s: cannot open socket \n",argv[0]);
-		exit(1);
+	if((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+	  printf("Unable to connect socket!\n");
+	  exit(1); 
 	}
 
 	/* bind local server port.  Note the server port must be a
 	   "well-known" whose value is known by the client */
+	bzero(&servAddr,sizeof(servAddr));                    //zero the struct
 	servAddr.sin_family = AF_INET;
 	servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	servAddr.sin_port = htons(LOCAL_SERVER_PORT);
-	rc = bind (************************************************);
+	rc = bind (sock, (struct sockaddr * ) &servAddr, sizeof(servAddr));
 	if(rc<0) {
-		printf("%s: cannot bind port number %d \n",argv[0], LOCAL_SERVER_PORT);
-		exit(1); 
+	  printf("%s: cannot bind port number %d \n",argv[0], LOCAL_SERVER_PORT);
+	  exit(1); 
 	}
 
 	printf("%s: waiting for data on port UDP %u\n",argv[0],LOCAL_SERVER_PORT);
 	char recvmsg[100];
-	int n = recvfrom(sd, &rcvmsg, sizeof (recvmsg), 0,
+	int n = recvfrom(sock, &recvmsg, sizeof (recvmsg), 0,
 			(struct sockaddr *) &cliAddr, &cliLen);
+	printf("Received Message: %s\n", recvmsg);
 }
 

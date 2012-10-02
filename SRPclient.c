@@ -19,7 +19,10 @@
 
 struct sockaddr_in cliAddr, remoteServAddr;
 
+
 int main(int argc, char *argv[]) {
+
+  int sock;
     
     //check command line args.
     if(argc<6) {
@@ -28,6 +31,8 @@ int main(int argc, char *argv[]) {
     }
 
     printf("error rate : %f\n",atof(argv[2]));
+
+    
 
     /* Note: you must initialize the network library first before calling
        sendto_().  The arguments are the <errorrate> and <random seed> */
@@ -46,13 +51,12 @@ int main(int argc, char *argv[]) {
     cliAddr.sin_port = htons(0);
 
     /* socket creation */
-    sd = socket(************************);
-    if(sd<0) {
-	printf("%s: cannot open socket \n",argv[0]);
-	exit(1);
+    if((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+      printf("Unable to connect socket!\n");
+      exit(1);
     }
 
-    msg[] = "send this";
-    sendto_(sd,msg, strlen(msg),0, (struct sockaddr *) &remoteServAddr,
+    char msg[] = "send this";
+    sendto_(sock,msg, strlen(msg),0, (struct sockaddr *) &remoteServAddr,
 	    sizeof(remoteServAddr));
 }
