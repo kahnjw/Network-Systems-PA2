@@ -21,7 +21,11 @@
 #include <time.h>
 #include "sendto_.h"
 
-#define LOCAL_SERVER_PORT 50000
+#include "types.h"
+
+#define LOCAL_SERVER_PORT 50007
+#define RWS 4
+#define MAXSEQNUM 6
 
 
 int main(int argc, char *argv[]) {
@@ -29,6 +33,7 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in cliAddr, servAddr;
 	unsigned int cliLen;
 	int sock, rc;
+	char recvmsg[100];
 
 	/* You should have some command-line processing that follows the format
 	   ./server_SRP <error_rate> <random_seed> <output_file> <receive_log>
@@ -40,11 +45,15 @@ int main(int argc, char *argv[]) {
 	}
 	printf("error rate : %f\n",atof(argv[1]));
 
-	
+	typedef struct{
 
-	
+	  int seqNum;
+	  int lastFrame; //Last frame flag                                                       \
+                                                                                           \
+                                                                                            
+	  char data[512];
+	} frame;
 
-	
 
 	/* Note: recvyou must initialize the network library first before calling
 	   sendto_().  The arguments are the <errorrate> and <random seed> */
@@ -68,10 +77,28 @@ int main(int argc, char *argv[]) {
 	  exit(1); 
 	}
 
+
+	cliLen = sizeof(cliAddr);
+
 	printf("%s: waiting for data on port UDP %u\n",argv[0],LOCAL_SERVER_PORT);
-	char recvmsg[100];
-	int n = recvfrom(sock, &recvmsg, sizeof (recvmsg), 0,
-			(struct sockaddr *) &cliAddr, &cliLen);
+	bzero(&recvmsg,sizeof(recvmsg)); 
+
+
+	if((recvfrom(sock, &recvmsg, sizeof (recvmsg), 0,
+		     (struct sockaddr *) &cliAddr, (socklen_t*) &cliLen))<0){
+	  perror("recvfrom()");
+	  exit(1);
+	}
 	printf("Received Message: %s\n", recvmsg);
+
+	ack ack1;
+	ack1.seqNum = 0;
+	ack ackresponse[1];
+
+	ackresponse[0] = ack1;
+	sendto_(sock,ackresponse, sizeof(ackresponse),0, (struct sockaddr *) &cliAddr,
+		sizeof(cliAddr));
+
+	
 }
 

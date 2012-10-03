@@ -15,15 +15,24 @@
 #include <unistd.h>
 #include "sendto_.h"
 
-#define REMOTE_SERVER_PORT 50000
+#include "types.h"
 
-struct sockaddr_in cliAddr, remoteServAddr;
 
+#define REMOTE_SERVER_PORT 50007
+#define SWS 4
+#define MAXSEQNUM 6
+
+struct sockaddr_in cliAddr, remoteServAddr, recAddr;
+
+void creatPacket(int seqnum, char filepath[], frame f); 
 
 int main(int argc, char *argv[]) {
 
   int sock;
-    
+  unsigned int recLen;
+  int i = 0;
+  
+
     //check command line args.
     if(argc<6) {
 	printf("usage : %s <server> <error rate> <random seed> <send_file> <send_log> \n", argv[0]);
@@ -57,6 +66,58 @@ int main(int argc, char *argv[]) {
     }
 
     char msg[] = "send this";
-    sendto_(sock,msg, strlen(msg),0, (struct sockaddr *) &remoteServAddr,
-	    sizeof(remoteServAddr));
+    char recvmsg[100];
+    ack recvAck;
+
+    frame frame1;
+    frame1.seqNum = 35;
+    char a = 'a';
+    printf("Size of seqNum: %d\n",sizeof(frame1.seqNum));
+    printf("Size of char: %d\n",sizeof(a));
+
+    frame1.lastFrame = 1;
+    frame1.dataSize = sizeof(msg);
+    strcpy(frame1.data, "Hello this is a test");
+
+    char* test;
+    frame* ftest;
+
+    test = makedatapacket(frame1);
+   
+    printf("Packet test: %s\n",test);
+
+    ftest = makedatastruct(test);
+    
+
+    printf("Frame test sequence num: %d\n",(*ftest).seqNum);
+
+    free(test);
+    free(ftest);
+    
+    
+
+
+    /*for(i = 0; i < sizeof(test); i++){
+      printf("%c",test[i]);
+      
+      }*/
+
+   
+    /*
+    if((sendto_(sock,msg, strlen(msg),0, (struct sockaddr *) &remoteServAddr,
+		sizeof(remoteServAddr)))< 0 ){
+      printf("Error Sending\n");
+      perror("sendto()");
+      exit(1);
+      }*/
+
+
+    /*printf("Sent message.\n");
+
+    int n = recvfrom(sock, &recvmsg, sizeof (recvmsg), 0,
+		     (struct sockaddr *) &recAddr, &recLen);
+    printf("Received Ack!\n");
+    recvAck.seqNum = ((ack)recvmsg[0]).seqNum;
+    printf("Received Frame %d",recvAck.seqNum);*/
+
 }
