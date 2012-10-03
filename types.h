@@ -34,6 +34,11 @@ void setFrame(frame* f, int seqnum, int lframe, int dsize, char* data){
 
 }
 
+void setAck(ack* a, int seqnum){
+  (*a).seqNum = seqnum;
+
+}
+
 void printFrame(frame f){
 
   printf("======================================\n");
@@ -59,6 +64,15 @@ ack* makeackstruct(char a[]){
 
   return ackreturn;
 }
+
+ack* makeackfromframe(frame f){
+  ack* ackreturn = calloc(16,1);
+
+  (*ackreturn).seqNum = f.seqNum;
+
+  return ackreturn;
+}
+
 
 char *makedatapacket(frame f){
   

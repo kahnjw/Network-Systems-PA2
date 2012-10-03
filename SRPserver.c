@@ -23,7 +23,7 @@
 
 #include "types.h"
 
-#define LOCAL_SERVER_PORT 50007
+#define LOCAL_SERVER_PORT 50008
 #define RWS 4
 #define MAXSEQNUM 6
 
@@ -36,6 +36,8 @@ int main(int argc, char *argv[]) {
 	char writebuffer[24*1024];
 	char recvmsg[1024];
 	frame* recvframe;
+	ack* a;
+	char* ackmsg;
 	/* You should have some command-line processing that follows the format
 	   ./server_SRP <error_rate> <random_seed> <output_file> <receive_log>
 	   */
@@ -97,16 +99,16 @@ int main(int argc, char *argv[]) {
 	
 	printFrame(*recvframe);
 
-	free(recvframe);
-	/*
-	ack ack1;
-	ack1.seqNum = 0;
-	ack ackresponse[1];
+	a = makeackfromframe(*recvframe);
 
-	ackresponse[0] = ack1;
-	sendto_(sock,ackresponse, sizeof(ackresponse),0, (struct sockaddr *) &cliAddr,
+	ackmsg = makeackmsg(*a);
+
+	
+	sendto_(sock,ackmsg, sizeof(ackmsg),0, (struct sockaddr *) &cliAddr,
 		sizeof(cliAddr));
 
-	*/
+	free(a);
+	free(recvframe);
+	free(ackmsg);
 }
 

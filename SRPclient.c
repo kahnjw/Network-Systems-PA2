@@ -14,25 +14,30 @@
 #include <signal.h>
 #include <unistd.h>
 #include "sendto_.h"
+#include <errno.h>
 
 #include "types.h"
 
 
-#define REMOTE_SERVER_PORT 50007
+#define REMOTE_SERVER_PORT 50008
 #define SWS 4
 #define MAXSEQNUM 6
+#define FILESIZE (24*1024)
+
 
 struct sockaddr_in cliAddr, remoteServAddr, recAddr;
 
-void creatPacket(int seqnum, char filepath[], frame f); 
 
 int main(int argc, char *argv[]) {
 
-  int sock;
+  int sock, lSize, readResult;
+  FILE* fp;
   unsigned int recLen;
   int i = 0;
   frame framearray[8];
   char* sendFrame;
+  char filebuffer[FILESIZE];
+  char recvmsg[100];
 
     //check command line args.
     if(argc<6) {
@@ -40,6 +45,26 @@ int main(int argc, char *argv[]) {
 	exit(1);
     }
 
+    printf("argv4: %s\n",argv[4]);
+
+    if(strcmp(argv[4],"0")){
+      fp = fopen(argv[4],"r");
+      if(fp == NULL){
+	printf("Error opening file: %s\n",strerror(errno));
+      }
+    
+
+      //Determine the size of the file and store in lSize       
+      fseek(fp,0,SEEK_END);
+      lSize = ftell(fp);
+      rewind(fp);
+
+      readResult = fread(filebuffer,1,lSize,fp);
+      if(readResult != lSize){printf("Reading error!\n");}
+    
+      fclose(fp);
+
+    }
     printf("error rate : %f\n",atof(argv[2]));
 
     
@@ -66,9 +91,7 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
 
-    char msg[] = "send this message bitch!!!";
-    char recvmsg[100];
-    printf("size of msg: %d\n",sizeof(msg));
+    char msg[] = "This is a test";  
     setFrame(&framearray[0],0,0,sizeof(msg),msg);
     
     printFrame(framearray[0]);
@@ -85,13 +108,14 @@ int main(int argc, char *argv[]) {
 
     free(sendFrame);
    
-    /*
+    
     if(recvfrom(sock, &recvmsg, sizeof (recvmsg), 0,(struct sockaddr *) &recAddr, &recLen) < 0){
       perror("recvfrom()");
       exit(1);
     }
 
     printf("Received Ack!\n");
-    */
-
+    printf("Ack Buffer: %s\n", recvmsg);
+    
+    
 }
