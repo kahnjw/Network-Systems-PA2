@@ -19,6 +19,30 @@ typedef struct{
   int seqNum;
 }ack;
 
+void setFrame(frame* f, int seqnum, int lframe, int dsize, char* data){
+
+  if(sizeof(data) > 512){
+    printf("setFrame data packet is too large.\n");
+    exit(1);
+
+  }
+
+  (*f).seqNum = seqnum;
+  (*f).lastFrame = lframe;
+  (*f).dataSize = dsize;
+  strcpy((*f).data,data);
+
+}
+
+void printFrame(frame f){
+
+  printf("======================================\n");
+  printf("Frame Sequence Number: %d\n",f.seqNum);
+  printf("Last Frame?: %d\n",f.lastFrame);
+  printf("Frame Size: %d\n",f.dataSize);
+  printf("Data: %s\n",f.data);
+  printf("======================================\n");
+}
 
 
 char* makeackmsg(ack a){

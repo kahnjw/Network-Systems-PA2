@@ -33,8 +33,9 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in cliAddr, servAddr;
 	unsigned int cliLen;
 	int sock, rc;
-	char recvmsg[100];
-
+	char writebuffer[24*1024];
+	char recvmsg[1024];
+	frame* recvframe;
 	/* You should have some command-line processing that follows the format
 	   ./server_SRP <error_rate> <random_seed> <output_file> <receive_log>
 	   */
@@ -89,8 +90,15 @@ int main(int argc, char *argv[]) {
 	  perror("recvfrom()");
 	  exit(1);
 	}
-	printf("Received Message: %s\n", recvmsg);
 
+	printf("Received Message: %s\n",recvmsg);
+
+	recvframe = makedatastruct(recvmsg);
+	
+	printFrame(*recvframe);
+
+	free(recvframe);
+	/*
 	ack ack1;
 	ack1.seqNum = 0;
 	ack ackresponse[1];
@@ -99,6 +107,6 @@ int main(int argc, char *argv[]) {
 	sendto_(sock,ackresponse, sizeof(ackresponse),0, (struct sockaddr *) &cliAddr,
 		sizeof(cliAddr));
 
-	
+	*/
 }
 

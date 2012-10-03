@@ -31,7 +31,8 @@ int main(int argc, char *argv[]) {
   int sock;
   unsigned int recLen;
   int i = 0;
-  
+  frame framearray[8];
+  char* sendFrame;
 
     //check command line args.
     if(argc<6) {
@@ -65,70 +66,32 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
 
-    char msg[] = "send this";
+    char msg[] = "send this message bitch!!!";
     char recvmsg[100];
-    ack recvAck;
-    char * ackTest;
-    ack* ackptrTest;
-
-    recvAck.seqNum = 1;
-
-    ackTest = makeackmsg(recvAck);
-
-    printf("Ack Message: %s\n", ackTest);
+    printf("size of msg: %d\n",sizeof(msg));
+    setFrame(&framearray[0],0,0,sizeof(msg),msg);
     
-    ackptrTest = makeackstruct(ackTest);
-
-    printf("Make Ack test: %d\n",(*ackptrTest).seqNum);
-
-    frame frame1;
-    frame1.seqNum = 35;    
-    frame1.lastFrame = 1;
-    frame1.dataSize = sizeof(msg);
-    strcpy(frame1.data, "Hello this is a test");
-
-    char* test;
-    frame* ftest;
-
-    test = makedatapacket(frame1);
-   
-    printf("Packet test: %s\n",test);
-
-    ftest = makedatastruct(test);
+    printFrame(framearray[0]);
     
+    sendFrame = makedatapacket(framearray[0]);
 
-    printf("Frame test sequence num: %d\n",(*ftest).seqNum);
-    printf("Last Frame: %d\n",(*ftest).lastFrame);
-    printf("Data Size: %d\n", (*ftest).dataSize);
-    printf("Data Sent: %s\n", (*ftest).data);
-
-    free(test);
-    free(ftest);
-    
-    
-
-
-    /*for(i = 0; i < sizeof(test); i++){
-      printf("%c",test[i]);
-      
-      }*/
-
-   
-    /*
-    if((sendto_(sock,msg, strlen(msg),0, (struct sockaddr *) &remoteServAddr,
+ 
+    if((sendto_(sock,sendFrame, strlen(sendFrame),0, (struct sockaddr *) &remoteServAddr,
 		sizeof(remoteServAddr)))< 0 ){
       printf("Error Sending\n");
       perror("sendto()");
       exit(1);
-      }*/
+    }
 
+    free(sendFrame);
+   
+    /*
+    if(recvfrom(sock, &recvmsg, sizeof (recvmsg), 0,(struct sockaddr *) &recAddr, &recLen) < 0){
+      perror("recvfrom()");
+      exit(1);
+    }
 
-    /*printf("Sent message.\n");
-
-    int n = recvfrom(sock, &recvmsg, sizeof (recvmsg), 0,
-		     (struct sockaddr *) &recAddr, &recLen);
     printf("Received Ack!\n");
-    recvAck.seqNum = ((ack)recvmsg[0]).seqNum;
-    printf("Received Frame %d",recvAck.seqNum);*/
+    */
 
 }
