@@ -70,11 +70,7 @@ int main(int argc, char *argv[]) {
     ack recvAck;
 
     frame frame1;
-    frame1.seqNum = 35;
-    char a = 'a';
-    printf("Size of seqNum: %d\n",sizeof(frame1.seqNum));
-    printf("Size of char: %d\n",sizeof(a));
-
+    frame1.seqNum = 35;    
     frame1.lastFrame = 1;
     frame1.dataSize = sizeof(msg);
     strcpy(frame1.data, "Hello this is a test");
@@ -90,6 +86,9 @@ int main(int argc, char *argv[]) {
     
 
     printf("Frame test sequence num: %d\n",(*ftest).seqNum);
+    printf("Last Frame: %d\n",(*ftest).lastFrame);
+    printf("Data Size: %d\n", (*ftest).dataSize);
+    printf("Data Sent: %s\n", (*ftest).data);
 
     free(test);
     free(ftest);

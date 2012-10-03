@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #define INTSIZE 4
-
+#define DELM "/"
 
 typedef struct{
 
@@ -42,33 +42,11 @@ char *makedatapacket(frame f){
   char finish[4];
   char dSize[4];
   char data[512];
+  char delm[] = DELM;
   int i, j;
 
 
   bzero(&sNum,sizeof(sNum));
-
-  /*
-  for(i = 0, j; i < INTSIZE; i++, j++){
-    creturn[j] = (*char)f.seqNum[i];
-  }
-
-  // sNum[0] = c[0];
-
-  for(i = 0, j; i < INTSIZE; i++, j++) {
-    creturn[j] = f.[j];
-  }
-  
-  for(i = 0, j; i < 512; i++, j++) {
-    data[j] = f.lastFrame[i];
-  }
-  */
-  /*sprintf(seqptr,"%d",f.seqNum);
-  
-  sprintf(lFrameptr,"%d",f.lastFrame);
-  
-  //strcpy(lFrameptr,f.lastFrame);
-
-  sprintf(dataptr,"%s",f.data);*/
   
   sprintf(sNum,"%d",f.seqNum);
   sprintf(finish,"%d",f.lastFrame);
@@ -82,8 +60,11 @@ char *makedatapacket(frame f){
   */
 
   strcat(creturn,sNum);
-  strcat(creturn,finish);                                                                  
-  strcat(creturn,dSize);                                                                  
+  strcat(creturn,delm);
+  strcat(creturn,finish);
+  strcat(creturn,delm);                                                                  
+  strcat(creturn,dSize);
+  strcat(creturn,delm);
   strcat(creturn,data);
   return creturn;
 }
@@ -92,6 +73,7 @@ char *makedatapacket(frame f){
 frame* makedatastruct(char* c){
 
   frame* sreturn = calloc(600,1);
+  char* p;
   char sNum[INTSIZE];
   char finish[INTSIZE];
   char dSize[INTSIZE];
@@ -99,29 +81,19 @@ frame* makedatastruct(char* c){
   int i;
   int j = 0;
   
-  for(i = 0, j; i < INTSIZE; i++, j++){
-    sNum[i] = c[j];
-  }
+  p = strtok(c,DELM);
+  strcpy(sNum,p);
+  p = strtok(NULL,DELM);
+  strcpy(finish,p);
+  p = strtok(NULL,DELM);
+  strcpy(dSize,p);
+  p = strtok(NULL,DELM);
+  strcpy(data,p);
 
-  // sNum[0] = c[0];
-
-  for(i = 0, j; i < INTSIZE; i++, j++) {
-    finish[i] = c[j];
-  }
-  
-  for(i = 0, j; i < 512; i++, j++) {
-    data[i] = c[j];
-  }
-
-  
-  // strncpy(sNum,c,4);
-  // strncpy(finish,c,4);
-  // strncpy(dSize,c,4);
-
-  
-  printf("sNum: %d\n",atoi(sNum));
-
-  (*sreturn).seqNum = (int)sNum;
+  (*sreturn).seqNum = atoi(sNum);
+  (*sreturn).lastFrame = atoi(finish);
+  (*sreturn).dataSize = atoi(dSize);
+  strcpy((*sreturn).data,data);
 
   return sreturn;
 }
