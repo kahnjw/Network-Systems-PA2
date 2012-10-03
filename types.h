@@ -21,16 +21,17 @@ typedef struct{
 
 
 
-char makeackmsg(ack a){
-  static char acknowledge[8];
+char* makeackmsg(ack a){
+
+  char *acknowledge = calloc(16,1);
   sprintf(acknowledge,"%d",a.seqNum);
-  return *acknowledge;
+  return acknowledge;
 }
 
-ack makeackstruct(char a[]){
-  static ack ackreturn;
+ack* makeackstruct(char a[]){
+  ack* ackreturn = calloc(16,1);
 
-  ackreturn.seqNum = atoi(a);
+  (*ackreturn).seqNum = atoi(a);
 
   return ackreturn;
 }
@@ -43,22 +44,13 @@ char *makedatapacket(frame f){
   char dSize[4];
   char data[512];
   char delm[] = DELM;
-  int i, j;
-
-
-  bzero(&sNum,sizeof(sNum));
-  
+    
   sprintf(sNum,"%d",f.seqNum);
   sprintf(finish,"%d",f.lastFrame);
   sprintf(dSize,"%d",f.dataSize);
   sprintf(data,"%s",f.data);
   
-  /*
-  strcat(sNum,finish);
-  strcat(sNum,dSize);
-  strcat(sNum,data);
-  */
-
+  /* Concat together all fields and add delims */
   strcat(creturn,sNum);
   strcat(creturn,delm);
   strcat(creturn,finish);
@@ -78,9 +70,7 @@ frame* makedatastruct(char* c){
   char finish[INTSIZE];
   char dSize[INTSIZE];
   char data[512];
-  int i;
-  int j = 0;
-  
+    
   p = strtok(c,DELM);
   strcpy(sNum,p);
   p = strtok(NULL,DELM);

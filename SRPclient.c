@@ -68,6 +68,18 @@ int main(int argc, char *argv[]) {
     char msg[] = "send this";
     char recvmsg[100];
     ack recvAck;
+    char * ackTest;
+    ack* ackptrTest;
+
+    recvAck.seqNum = 1;
+
+    ackTest = makeackmsg(recvAck);
+
+    printf("Ack Message: %s\n", ackTest);
+    
+    ackptrTest = makeackstruct(ackTest);
+
+    printf("Make Ack test: %d\n",(*ackptrTest).seqNum);
 
     frame frame1;
     frame1.seqNum = 35;    
