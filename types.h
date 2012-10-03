@@ -11,6 +11,7 @@ typedef struct{
   int seqNum;
   int lastFrame; //Last frame flag
   int dataSize;
+  char filename[100];
   char data[512];
 } frame;
 
@@ -19,7 +20,7 @@ typedef struct{
   int seqNum;
 }ack;
 
-void setFrame(frame* f, int seqnum, int lframe, int dsize, char* data){
+void setFrame(frame* f, int seqnum, int lframe, int dsize, char* fname,char* data){
 
   if(sizeof(data) > 512){
     printf("setFrame data packet is too large.\n");
@@ -30,6 +31,7 @@ void setFrame(frame* f, int seqnum, int lframe, int dsize, char* data){
   (*f).seqNum = seqnum;
   (*f).lastFrame = lframe;
   (*f).dataSize = dsize;
+  strcpy((*f).filename,fname);
   strcpy((*f).data,data);
 
 }
@@ -45,6 +47,7 @@ void printFrame(frame f){
   printf("Frame Sequence Number: %d\n",f.seqNum);
   printf("Last Frame?: %d\n",f.lastFrame);
   printf("Frame Size: %d\n",f.dataSize);
+  printf("File name: %s\n",f.filename);
   printf("Data: %s\n",f.data);
   printf("======================================\n");
 }
@@ -80,12 +83,14 @@ char *makedatapacket(frame f){
   char sNum[4];
   char finish[4];
   char dSize[4];
+  char fname[100];
   char data[512];
   char delm[] = DELM;
     
   sprintf(sNum,"%d",f.seqNum);
   sprintf(finish,"%d",f.lastFrame);
   sprintf(dSize,"%d",f.dataSize);
+  sprintf(fname,"%s",f.filename);
   sprintf(data,"%s",f.data);
   
   /* Concat together all fields and add delims */
@@ -94,6 +99,8 @@ char *makedatapacket(frame f){
   strcat(creturn,finish);
   strcat(creturn,delm);                                                                  
   strcat(creturn,dSize);
+  strcat(creturn,delm);
+  strcat(creturn,fname);
   strcat(creturn,delm);
   strcat(creturn,data);
   return creturn;
@@ -107,6 +114,7 @@ frame* makedatastruct(char* c){
   char sNum[INTSIZE];
   char finish[INTSIZE];
   char dSize[INTSIZE];
+  char fname[100];
   char data[512];
     
   p = strtok(c,DELM);
@@ -116,11 +124,14 @@ frame* makedatastruct(char* c){
   p = strtok(NULL,DELM);
   strcpy(dSize,p);
   p = strtok(NULL,DELM);
+  strcpy(fname,p);
+  p = strtok(NULL,DELM);
   strcpy(data,p);
 
   (*sreturn).seqNum = atoi(sNum);
   (*sreturn).lastFrame = atoi(finish);
   (*sreturn).dataSize = atoi(dSize);
+  strcpy((*sreturn).filename,fname);
   strcpy((*sreturn).data,data);
 
   return sreturn;

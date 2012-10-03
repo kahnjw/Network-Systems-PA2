@@ -23,7 +23,8 @@
 #define SWS 4
 #define MAXSEQNUM 6
 #define FILESIZE (24*1024)
-
+#define BUFSIZE 100
+//#define DELM "/"
 
 struct sockaddr_in cliAddr, remoteServAddr, recAddr;
 
@@ -36,8 +37,12 @@ int main(int argc, char *argv[]) {
   int i = 0;
   frame framearray[8];
   char* sendFrame;
+  char* p;
   char filebuffer[FILESIZE];
-  char recvmsg[100];
+  char recvmsg[BUFSIZE];
+  char directemp[BUFSIZE];
+  char filename[BUFSIZE];
+  char msgbuffer[512];
 
     //check command line args.
     if(argc<6) {
@@ -48,6 +53,17 @@ int main(int argc, char *argv[]) {
     printf("argv4: %s\n",argv[4]);
 
     if(strcmp(argv[4],"0")){
+
+      strcpy(directemp,argv[4]);
+      p = strtok(directemp,DELM);
+      
+      while(p != NULL){
+	strcpy(filename,p);
+	p= strtok(NULL,DELM);
+      }
+      
+      printf("Filename: %s\n",filename);
+      
       fp = fopen(argv[4],"r");
       if(fp == NULL){
 	printf("Error opening file: %s\n",strerror(errno));
@@ -65,6 +81,9 @@ int main(int argc, char *argv[]) {
       fclose(fp);
 
     }
+
+    strcpy(msgbuffer,filebuffer);
+
     printf("error rate : %f\n",atof(argv[2]));
 
     
@@ -91,8 +110,8 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
 
-    char msg[] = "This is a test";  
-    setFrame(&framearray[0],0,0,sizeof(msg),msg);
+    //char msg[] = "This is a test";  
+    setFrame(&framearray[0],0,0,sizeof(msgbuffer),filename,msgbuffer);
     
     printFrame(framearray[0]);
     
