@@ -1,7 +1,11 @@
 #include <stdio.h>
-#include <unistd.h> /* close() */
-#include <strings.h> /* memset() */
 #include <stdlib.h>
+#include <unistd.h>
+#include <string.h>   /* memset() */
+#include <sys/time.h> /* select() */
+#include <unistd.h>
+#include <sys/time.h>
+#include <time.h>
 
 #define INTSIZE 4
 #define DELM "/"
@@ -19,6 +23,24 @@ typedef struct{
 
   int seqNum;
 }ack;
+
+int ballinselect(int sock, fd_set* readFDS, int tsec, int tusec){
+  
+  
+  int iSockRet, iSelRet;
+  struct timeval timeVal;
+
+  timeVal.tv_sec = tsec;
+  timeVal.tv_usec = tusec;
+  
+  FD_ZERO(readFDS);
+  FD_SET(sock, readFDS);
+
+  iSelRet = select(FD_SETSIZE, readFDS, NULL, NULL, &timeVal);
+
+  return iSelRet;
+
+}
 
 void setFrame(frame* f, int seqnum, int lframe, int dsize, char* fname,char* data){
 
