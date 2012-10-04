@@ -24,6 +24,37 @@ typedef struct{
   int seqNum;
 }ack;
 
+
+
+
+int MoveForward(int* LB, int* RB, int* ackarray[], int arraySize) {
+  int moveCount, i;
+  
+  if(*LB < *RB){
+    
+    for(i = *LB; i < *RB, ackarray[i] == 1; i++) moveCount++;
+  
+  } else if (*LB > *RB) {
+    
+    for(i = *LB; i < arraySize, ackarray[i] == 1; i++) moveCount++;
+  
+    for(i = 0; i < *RB, ackarray[i] == 1; i++) moveCount++;
+
+  }
+
+  /* Set right bound and leftbount according to how far
+   * everything moved 
+   */
+  *LB = ( *LB + moveCount ) % 8;
+  *RB = ( *RB + moveCount ) % 8;
+  
+  return moveCount;
+}
+
+void SendNextFrames() {
+  
+}
+
 int ballinselect(int sock, fd_set* readFDS, int tsec, int tusec){
   
   
@@ -128,10 +159,21 @@ char *makedatapacket(frame f){
   return creturn;
 }
 
+int readtoframe(char* c, FILE* fp){
+  int result = 0;
 
-frame* makedatastruct(char* c){
+  int readResult = fread(c,1,512,fp);
 
-  frame* sreturn = calloc(600,1);
+  if(readResult < 512){result = 1;}
+  
+  return result;
+
+}
+
+
+frame* makedatastruct(char* c, frame* sreturn){
+
+  //frame* sreturn = calloc(600,1);
   char* p;
   char sNum[INTSIZE];
   char finish[INTSIZE];

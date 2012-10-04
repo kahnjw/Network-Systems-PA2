@@ -48,6 +48,11 @@ int main(int argc, char *argv[]) {
   struct timeval time;
   fd_set readFDS;
   int ackarray[MAXSEQNUM];
+  double timearray[SWS];
+  int minwindow = 0;
+  int maxwindow = 3;
+  frame frame0, frame1, frame2, frame3;
+
 
   char msg0[] = "This is Frame 0";
   char msg1[] = "This is Frame 1";
@@ -60,6 +65,18 @@ int main(int argc, char *argv[]) {
   char msg8[] = "This is Frame 8";
   char msg9[] = "This is Frame 9";
   char msg10[] = "This is Frame 10";
+
+  setFrame(&framearray[0],0,0,sizeof(msg0),"test.txt",msg0);
+  setFrame(&framearray[1],1,0,sizeof(msg1),"test.txt",msg1);
+  setFrame(&framearray[2],2,0,sizeof(msg2),"test.txt",msg2);
+  setFrame(&framearray[3],3,0,sizeof(msg3),"test.txt",msg3);
+  setFrame(&framearray[4],4,0,sizeof(msg4),"test.txt",msg4);
+  setFrame(&framearray[5],5,0,sizeof(msg5),"test.txt",msg5);
+  setFrame(&framearray[6],6,0,sizeof(msg6),"test.txt",msg6);
+  setFrame(&framearray[7],7,0,sizeof(msg7),"test.txt",msg7);
+  setFrame(&framearray[8],8,0,sizeof(msg8),"test.txt",msg8);
+  setFrame(&framearray[9],9,0,sizeof(msg9),"test.txt",msg9);
+  setFrame(&framearray[10],10,1,sizeof(msg10 ),"test.txt",msg10);
 
 
   //check command line args.
@@ -81,24 +98,15 @@ int main(int argc, char *argv[]) {
     }
       
     printf("Filename: %s\n",filename);
-      
     fp = fopen(argv[4],"r");
     if(fp == NULL){
       printf("Error opening file: %s\n",strerror(errno));
     }
+     
+    
     
 
-    //Determine the size of the file and store in lSize       
-    fseek(fp,0,SEEK_END);
-    lSize = ftell(fp);
-    rewind(fp);
-
-    readResult = fread(filebuffer,1,lSize,fp);
-    if(readResult != lSize){printf("Reading error!\n");}
-      
-    fclose(fp);
-
-    strcpy(msgbuffer,filebuffer);
+    //strcpy(msgbuffer,filebuffer);
   }
 
   
@@ -133,18 +141,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  setFrame(&framearray[0],0,0,sizeof(msg0),"test.txt",msg0);
-  setFrame(&framearray[1],1,0,sizeof(msg1),"test.txt",msg1);
-  setFrame(&framearray[1],2,0,sizeof(msg2),"test.txt",msg2);
-  setFrame(&framearray[1],3,0,sizeof(msg3),"test.txt",msg3);
-  setFrame(&framearray[1],4,0,sizeof(msg4),"test.txt",msg4);
-  setFrame(&framearray[1],5,0,sizeof(msg5),"test.txt",msg5);
-  setFrame(&framearray[1],6,0,sizeof(msg6),"test.txt",msg6);
-  setFrame(&framearray[1],7,0,sizeof(msg7),"test.txt",msg7);
-  setFrame(&framearray[1],8,0,sizeof(msg8),"test.txt",msg8);
-  setFrame(&framearray[1],9,0,sizeof(msg9),"test.txt",msg9);
-  setFrame(&framearray[1],10,1,sizeof(msg10 ),"test.txt",msg10);
-
+  
 
   //printFrame(framearray[0]);
     
@@ -185,6 +182,6 @@ int main(int argc, char *argv[]) {
   }
 
   free(sendFrame);
-    
+  fclose(fp);
     
 }
