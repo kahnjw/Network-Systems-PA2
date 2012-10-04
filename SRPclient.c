@@ -134,9 +134,12 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  char array1[512];
-  char array2[512];
-  char array3[512];
+  char array1[513];
+  array1[512] ='\0';
+  char array2[513];
+  array2[512] = '\0';
+  char array3[513];
+  array3[512] = '\0';
 
   readtoframe(array1, &fp);
   readtoframe(array2, &fp);

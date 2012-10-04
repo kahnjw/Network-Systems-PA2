@@ -200,10 +200,18 @@ void makedatapacket(char* creturn, frame f){
 
 int readtoframe(char* c, FILE** fp){
   int result = 0;
-  
-  fseek(*fp, 1, SEEK_CUR);
+  char temp[512];
 
-  int readResult = fread(c,1,512,*fp);
+  //fseek(*fp, 1, SEEK_CUR);
+
+  printf("IN FILE AT: %ld\n",ftell(*fp));
+
+  int readResult = fread(temp,1,512,*fp);
+  
+  strcpy(c,temp);
+  
+  printf("READ: \n%s\n\n\n",temp);
+  
   
   if(readResult < 512){result = 1;}
   
