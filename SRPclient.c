@@ -47,12 +47,9 @@ int main(int argc, char *argv[]) {
   char msgbuffer[512];
   struct timeval time;
   fd_set readFDS;
-  int ackarray[MAXSEQNUM];
   double timearray[SWS];
-  int minwindow = 0;
-  int maxwindow = 3;
-  frame frame0, frame1, frame2, frame3;
-
+  frame frameArray[MAXSEQNUM];
+  int LB = 0, RB = 4;
 
   char msg0[] = "This is Frame 0";
   char msg1[] = "This is Frame 1";
@@ -66,18 +63,17 @@ int main(int argc, char *argv[]) {
   char msg9[] = "This is Frame 9";
   char msg10[] = "This is Frame 10";
 
-  setFrame(&framearray[0],0,0,sizeof(msg0),"test.txt",msg0);
-  setFrame(&framearray[1],1,0,sizeof(msg1),"test.txt",msg1);
-  setFrame(&framearray[2],2,0,sizeof(msg2),"test.txt",msg2);
-  setFrame(&framearray[3],3,0,sizeof(msg3),"test.txt",msg3);
-  setFrame(&framearray[4],4,0,sizeof(msg4),"test.txt",msg4);
-  setFrame(&framearray[5],5,0,sizeof(msg5),"test.txt",msg5);
-  setFrame(&framearray[6],6,0,sizeof(msg6),"test.txt",msg6);
-  setFrame(&framearray[7],7,0,sizeof(msg7),"test.txt",msg7);
-  setFrame(&framearray[8],8,0,sizeof(msg8),"test.txt",msg8);
-  setFrame(&framearray[9],9,0,sizeof(msg9),"test.txt",msg9);
-  setFrame(&framearray[10],10,1,sizeof(msg10 ),"test.txt",msg10);
-
+  setFrame(&framearray[0],0,0,sizeof(msg0),0,msg0);
+  setFrame(&framearray[1],1,0,sizeof(msg1),0,msg1);
+  setFrame(&framearray[2],2,0,sizeof(msg2),0,msg2);
+  setFrame(&framearray[3],3,0,sizeof(msg3),0,msg3);
+  setFrame(&framearray[4],4,0,sizeof(msg4),0,msg4);
+  setFrame(&framearray[5],5,0,sizeof(msg5),0,msg5);
+  setFrame(&framearray[6],6,0,sizeof(msg6),0,msg6);
+  setFrame(&framearray[7],7,0,sizeof(msg7),0,msg7);
+  setFrame(&framearray[8],8,0,sizeof(msg8),0,msg8);
+  setFrame(&framearray[9],9,0,sizeof(msg9),0,msg9);
+  setFrame(&framearray[10],10,1,sizeof(msg10 ),0,msg10);
 
   //check command line args.
   if(argc<6) {
@@ -103,9 +99,6 @@ int main(int argc, char *argv[]) {
       printf("Error opening file: %s\n",strerror(errno));
     }
      
-    
-    
-
     //strcpy(msgbuffer,filebuffer);
   }
 
@@ -141,22 +134,38 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  
+  char array1[512];
+  char array2[512];
+  char array3[512];
+
+  readtoframe(array1, &fp);
+  readtoframe(array2, &fp);
+  readtoframe(array3, &fp);
+ 
+  printf("Array 1:\n %s\n\n\n\n", array1);
+  printf("Array 2:\n %s\n\n\n\n", array2);
+  printf("Array 3:\n %s\n\n\n\n", array3);
 
   //printFrame(framearray[0]);
     
-  sendFrame = makedatapacket(framearray[0]);
+  //sendFrame = makedatapacket(framearray[0]);
 
   while(1){
-    gettimeofday(&time,NULL);
+    int oldLB = LB;
+    
+    int moveCount = MoveForward(&LB, &RB, frameArray, MAXSEQNUM);
+
+    SendNextFrames(moveCount, frameArray, MAXSEQNUM, RB, fp);
+
+    /*gettimeofday(&time,NULL);
     double t1 = time.tv_sec + (time.tv_usec/1000000.0);
-    printf("Sent time: %f\n", t1);
-    if((sendto_(sock,sendFrame, strlen(sendFrame),0, (struct sockaddr *) &remoteServAddr,
+    printf("Sent time: %f\n", t1);*/
+    /*if((sendto_(sock,sendFrame, strlen(sendFrame),0, (struct sockaddr *) &remoteServAddr,
 		sizeof(remoteServAddr)))< 0 ){
       printf("Error Sending\n");
       perror("sendto()");
       exit(1);
-    }
+      }*/
       
     selret = ballinselect(sock,&readFDS,10,0);
 

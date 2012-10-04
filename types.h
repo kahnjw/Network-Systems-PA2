@@ -15,7 +15,8 @@ typedef struct{
   int seqNum;
   int lastFrame; //Last frame flag
   int dataSize;
-  char filename[100];
+  int ack;
+  //char filename[100];
   char data[512];
 } frame;
 
@@ -27,18 +28,27 @@ typedef struct{
 
 
 
-int MoveForward(int* LB, int* RB, int* ackarray[], int arraySize) {
+int MoveForward(int* LB, int* RB, frame frameArray[], int arraySize) {
   int moveCount, i;
   
   if(*LB < *RB){
     
-    for(i = *LB; i < *RB, ackarray[i] == 1; i++) moveCount++;
-  
+    for(i = *LB; i < *RB, frameArray[i].ack == 1; i++) {
+      moveCount++;
+      frameArray[i].ack = 0;
+    }
+    
   } else if (*LB > *RB) {
     
-    for(i = *LB; i < arraySize, ackarray[i] == 1; i++) moveCount++;
-  
-    for(i = 0; i < *RB, ackarray[i] == 1; i++) moveCount++;
+    for(i = *LB; i < arraySize, frameArray[i].ack == 1; i++) {
+      moveCount++;
+      frameArray[i].ack = 0;
+    }
+    
+    for(i = 0; i < *RB, frameArray[i].ack == 1; i++) {
+      moveCount++;
+      frameArray[i].ack = 0;
+    }
 
   }
 
@@ -51,8 +61,50 @@ int MoveForward(int* LB, int* RB, int* ackarray[], int arraySize) {
   return moveCount;
 }
 
-void SendNextFrames() {
-  
+void setFrame(frame* f, int seqnum, int lframe, int dsize, int ack, char* data){
+
+  if(sizeof(data) > 512){
+    printf("setFrame data packet is too large.\n");
+    exit(1);
+
+  }
+
+  (*f).seqNum = seqnum;
+  (*f).lastFrame = lframe;
+  (*f).dataSize = dsize;
+  (*f).ack = ack;
+  //strcpy((*f).filename,fname);
+  strcpy((*f).data,data);
+
+}
+
+void SendNextFrames(int moveCount, frame frameArray[], int arraySize, int RB, FILE* fp) {
+  int i, j, startSeq, finishSeq, isLastFrame;
+  char data[512];
+
+  startSeq = ( RB - moveCount ) % arraySize;
+  finishSeq = ( startSeq + moveCount ) % arraySize;
+
+  if(startSeq < finishSeq){
+    
+    for(i = startSeq; i < finishSeq; i++) {
+      isLastFrame = readtoframe(data, fp);
+      setFrame(&frameArray[i], i, isLastFrame, strlen(data), 0, data);
+    }
+    
+  } else if (startSeq > finishSeq) {
+    
+    for (i = startSeq; i < arraySize; i++){
+      isLastFrame = readtoframe(data, fp);
+      setFrame(&frameArray[i], i, isLastFrame, strlen(data), 0, data);
+    }
+
+    for(i = 0; i < finishSeq; i++) {
+      isLastFrame = readtoframe(data, fp);
+      setFrame(&frameArray[i], i, isLastFrame, strlen(data), 0, data);
+    }
+    
+  }
 }
 
 int ballinselect(int sock, fd_set* readFDS, int tsec, int tusec){
@@ -73,22 +125,6 @@ int ballinselect(int sock, fd_set* readFDS, int tsec, int tusec){
 
 }
 
-void setFrame(frame* f, int seqnum, int lframe, int dsize, char* fname,char* data){
-
-  if(sizeof(data) > 512){
-    printf("setFrame data packet is too large.\n");
-    exit(1);
-
-  }
-
-  (*f).seqNum = seqnum;
-  (*f).lastFrame = lframe;
-  (*f).dataSize = dsize;
-  strcpy((*f).filename,fname);
-  strcpy((*f).data,data);
-
-}
-
 void setAck(ack* a, int seqnum){
   (*a).seqNum = seqnum;
 
@@ -100,7 +136,8 @@ void printFrame(frame f){
   printf("Frame Sequence Number: %d\n",f.seqNum);
   printf("Last Frame?: %d\n",f.lastFrame);
   printf("Frame Size: %d\n",f.dataSize);
-  printf("File name: %s\n",f.filename);
+  //printf("File name: %s\n",f.filename);
+  printf("Frame ack?: %d\n",f.ack);
   printf("Data: %s\n",f.data);
   printf("======================================\n");
 }
@@ -130,20 +167,22 @@ ack* makeackfromframe(frame f){
 }
 
 
-char *makedatapacket(frame f){
+void makedatapacket(char* creturn, frame f){
   
-  char* creturn = calloc(600,1);
+  //char* creturn = calloc(600,1);
   char sNum[4];
   char finish[4];
   char dSize[4];
-  char fname[100];
+  char ack[4];
+  //char fname[100];
   char data[512];
   char delm[] = DELM;
     
   sprintf(sNum,"%d",f.seqNum);
   sprintf(finish,"%d",f.lastFrame);
   sprintf(dSize,"%d",f.dataSize);
-  sprintf(fname,"%s",f.filename);
+  sprintf(ack,"%d",f.ack);
+  //sprintf(fname,"%s",f.filename);
   sprintf(data,"%s",f.data);
   
   /* Concat together all fields and add delims */
@@ -153,17 +192,19 @@ char *makedatapacket(frame f){
   strcat(creturn,delm);                                                                  
   strcat(creturn,dSize);
   strcat(creturn,delm);
-  strcat(creturn,fname);
+  strcat(creturn,ack);
   strcat(creturn,delm);
   strcat(creturn,data);
-  return creturn;
+  //return creturn;
 }
 
-int readtoframe(char* c, FILE* fp){
+int readtoframe(char* c, FILE** fp){
   int result = 0;
+  
+  fseek(*fp, 1, SEEK_CUR);
 
-  int readResult = fread(c,1,512,fp);
-
+  int readResult = fread(c,1,512,*fp);
+  
   if(readResult < 512){result = 1;}
   
   return result;
@@ -171,16 +212,17 @@ int readtoframe(char* c, FILE* fp){
 }
 
 
-frame* makedatastruct(char* c, frame* sreturn){
+void makedatastruct(char* c, frame* sreturn){
 
   //frame* sreturn = calloc(600,1);
   char* p;
   char sNum[INTSIZE];
   char finish[INTSIZE];
   char dSize[INTSIZE];
-  char fname[100];
+  char ack[INTSIZE];
+  //char fname[100];
   char data[512];
-    
+  
   p = strtok(c,DELM);
   strcpy(sNum,p);
   p = strtok(NULL,DELM);
@@ -188,15 +230,16 @@ frame* makedatastruct(char* c, frame* sreturn){
   p = strtok(NULL,DELM);
   strcpy(dSize,p);
   p = strtok(NULL,DELM);
-  strcpy(fname,p);
+  strcpy(ack,p);
   p = strtok(NULL,DELM);
   strcpy(data,p);
-
+  
   (*sreturn).seqNum = atoi(sNum);
   (*sreturn).lastFrame = atoi(finish);
   (*sreturn).dataSize = atoi(dSize);
-  strcpy((*sreturn).filename,fname);
+  (*sreturn).ack = atoi(ack);
+  //strcpy((*sreturn).filename,fname);
   strcpy((*sreturn).data,data);
-
-  return sreturn;
+  
+  //return sreturn;
 }
